@@ -1,0 +1,32 @@
+@startuml
+title DSD-03: Approve or Reject Loan Request
+autonumber
+actor "Loan Coordinator" as Coordinator
+boundary CoordinatorUI
+control LoanRequestController
+entity LoanRequestRepository
+control AvailabilityPolicy
+entity LoanDecision
+entity EquipmentReservation
+entity ReservationRepository
+Coordinator -> CoordinatorUI: submit decision
+CoordinatorUI -> LoanRequestController: decideLoanRequest(coordinatorId, reference, decision, reason)
+LoanRequestController -> LoanRequestRepository: find(reference)
+LoanRequestRepository --> LoanRequestController: request
+alt decision is Approve
+  LoanRequestController -> AvailabilityPolicy: isAvailable(type, quantity, period)
+  AvailabilityPolicy --> LoanRequestController: available
+  create LoanDecision
+  LoanRequestController -> LoanDecision: approve(coordinator, request)
+  create EquipmentReservation
+  LoanRequestController -> EquipmentReservation: create(request.type, quantity, period)
+  LoanRequestController -> LoanRequest: approve(decision, reservation)
+  LoanRequestController -> ReservationRepository: save(reservation)
+else decision is Reject
+  create LoanDecision
+  LoanRequestController -> LoanDecision: reject(coordinator, request, reason)
+  LoanRequestController -> LoanRequest: reject(decision)
+end
+LoanRequestController -> LoanRequestRepository: save(request)
+LoanRequestController --> CoordinatorUI: decisionRecorded(outcome)
+@enduml

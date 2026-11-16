@@ -1,0 +1,13 @@
+@startuml
+title SSD-01: Submit Standard Loan Request
+actor Member
+boundary "Community Equipment Loan System" as System
+Member -> System: submitLoanRequest(memberNumber, typeCode, quantity, collectionDate, durationDays)
+alt valid request
+  System --> Member: requestAccepted(reference, SUBMITTED)
+else invalid or unavailable request
+  System --> Member: requestRefused(reason)
+else controlled system failure
+  System --> Member: requestFailed(reason)
+end
+@enduml

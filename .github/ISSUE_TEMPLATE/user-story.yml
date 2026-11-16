@@ -1,0 +1,22 @@
+name: User Story
+about: Value-oriented Product Backlog item
+title: "US-XX: "
+labels: ["user-story"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      placeholder: "As a ..., I want ..., so that ..."
+    validations: {required: true}
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- [ ] AC1 ..."
+    validations: {required: true}
+  - type: textarea
+    id: traceability
+    attributes:
+      label: Traceability
+      placeholder: "Requirements/rules, use case and repository links"

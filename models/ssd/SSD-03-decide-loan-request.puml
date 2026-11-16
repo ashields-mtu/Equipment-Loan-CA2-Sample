@@ -1,0 +1,13 @@
+@startuml
+title SSD-03: Approve or Reject Loan Request
+actor "Loan Coordinator" as Coordinator
+boundary "Community Equipment Loan System" as System
+Coordinator -> System: decideLoanRequest(coordinatorId, reference, decision, reason)
+alt approval succeeds
+  System --> Coordinator: requestApproved(reference, reservationReference)
+else rejection succeeds
+  System --> Coordinator: requestRejected(reference)
+else decision refused
+  System --> Coordinator: decisionRefused(reason)
+end
+@enduml

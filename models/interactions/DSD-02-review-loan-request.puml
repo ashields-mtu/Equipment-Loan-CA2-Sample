@@ -1,0 +1,22 @@
+@startuml
+title DSD-02: Review Loan Request
+autonumber
+actor "Loan Coordinator" as Coordinator
+boundary CoordinatorUI
+control LoanRequestController
+entity CoordinatorRepository
+entity LoanRequestRepository
+control AvailabilityPolicy
+Coordinator -> CoordinatorUI: select submitted request
+CoordinatorUI -> LoanRequestController: getReviewSummary(coordinatorId, reference)
+LoanRequestController -> CoordinatorRepository: find(coordinatorId)
+CoordinatorRepository --> LoanRequestController: coordinator
+LoanRequestController -> Coordinator: canReviewRequests()
+Coordinator --> LoanRequestController: authorised
+LoanRequestController -> LoanRequestRepository: find(reference)
+LoanRequestRepository --> LoanRequestController: request
+LoanRequestController -> AvailabilityPolicy: evaluate(request.type, request.quantity, request.period)
+AvailabilityPolicy --> LoanRequestController: evidence
+LoanRequestController --> CoordinatorUI: ReviewSummary(request, eligibility, evidence)
+CoordinatorUI --> Coordinator: display summary
+@enduml

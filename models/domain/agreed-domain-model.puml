@@ -1,0 +1,23 @@
+@startuml
+title Agreed Domain Model
+hide methods
+skinparam classAttributeIconSize 0
+class Member
+class BorrowingAccount
+class EquipmentType
+class LoanRequest
+class LoanPeriod
+class LoanDecision
+class EquipmentReservation
+class LoanCoordinator
+
+Member "1" -- "1" BorrowingAccount : holds
+Member "1" -- "0..*" LoanRequest : submits
+LoanRequest "1" -- "1" EquipmentType : requests
+LoanRequest "1" *-- "1" LoanPeriod : for
+LoanRequest "1" -- "0..1" LoanDecision : receives
+LoanDecision "*" -- "1" LoanCoordinator : made by
+LoanRequest "1" -- "0..1" EquipmentReservation : creates when approved
+EquipmentReservation "*" -- "1" EquipmentType : reserves
+EquipmentReservation "1" *-- "1" LoanPeriod : for
+@enduml

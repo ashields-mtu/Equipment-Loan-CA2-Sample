@@ -1,0 +1,26 @@
+@startuml
+title Design Structure / Package View
+package ui { class LoanRequestUI
+class CoordinatorUI }
+package application { class LoanRequestController
+class SubmitLoanRequestResult
+class ReviewSummaryResult
+class LoanDecisionResult }
+package domain { class Member
+class LoanCoordinator
+class LoanRequest
+class LoanPeriod
+class EquipmentType
+class LoanDecision
+class EquipmentReservation
+class AvailabilityPolicy }
+package ports { interface MemberRepository
+interface EquipmentTypeRepository
+interface LoanRequestRepository
+interface ReservationRepository
+interface RequestReferenceGenerator }
+ui ..> application
+application ..> domain
+application ..> ports
+domain ..> ports : availability query port
+@enduml

@@ -1,0 +1,55 @@
+@startuml
+title Integrated Design Class Diagram
+skinparam classAttributeIconSize 0
+interface MemberRepository { +find(memberNumber): Member }
+interface EquipmentTypeRepository { +find(typeCode): EquipmentType }
+interface LoanRequestRepository { +find(reference): LoanRequest
++save(request): void }
+interface ReservationRepository { +findFor(type, period): List<EquipmentReservation>
++save(reservation): void }
+interface RequestReferenceGenerator { +nextReference(): RequestReference }
+class LoanRequestController <<controller>> {
++submitLoanRequest(details): SubmitLoanRequestResult
++getReviewSummary(coordinatorId, reference): ReviewSummaryResult
++decideLoanRequest(coordinatorId, reference, decision, reason): LoanDecisionResult
+}
+class Member <<entity>> { -memberNumber: MemberNumber
+-accountStatus: AccountStatus
++canBorrow(): Boolean }
+class LoanCoordinator <<entity>> { +canReviewRequests(): Boolean
++canDecideRequests(): Boolean }
+class EquipmentType <<entity>> { -typeCode: EquipmentTypeCode
+-totalQuantity: int }
+class LoanPeriod <<value object>> { -collectionDate: LocalDate
+-durationDays: int
++overlaps(other): Boolean }
+class LoanRequest <<entity>> { -reference: RequestReference
+-quantity: int
+-status: LoanRequestStatus
++submit(...): LoanRequest
++approve(decision, reservation): void
++reject(decision): void
++isSubmitted(): Boolean }
+class AvailabilityPolicy <<service>> { +isAvailable(type, quantity, period): Boolean
++evaluate(type, quantity, period): AvailabilityEvidence }
+class LoanDecision <<entity>> { +approve(coordinator, request): LoanDecision
++reject(coordinator, request, reason): LoanDecision }
+class EquipmentReservation <<entity>> { +create(type, quantity, period): EquipmentReservation }
+class SubmitLoanRequestResult <<result>>
+class ReviewSummaryResult <<result>>
+class LoanDecisionResult <<result>>
+LoanRequestController --> MemberRepository
+LoanRequestController --> EquipmentTypeRepository
+LoanRequestController --> LoanRequestRepository
+LoanRequestController --> ReservationRepository
+LoanRequestController --> RequestReferenceGenerator
+LoanRequestController --> AvailabilityPolicy
+LoanRequest "*" --> "1" Member
+LoanRequest "*" --> "1" EquipmentType
+LoanRequest *-- LoanPeriod
+LoanRequest "1" --> "0..1" LoanDecision
+LoanRequest "1" --> "0..1" EquipmentReservation
+AvailabilityPolicy --> ReservationRepository
+EquipmentReservation "*" --> "1" EquipmentType
+EquipmentReservation *-- LoanPeriod
+@enduml

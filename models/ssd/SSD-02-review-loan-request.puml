@@ -1,0 +1,11 @@
+@startuml
+title SSD-02: Review Loan Request
+actor "Loan Coordinator" as Coordinator
+boundary "Community Equipment Loan System" as System
+Coordinator -> System: getLoanRequestReviewSummary(coordinatorId, reference)
+alt authorised and request exists
+  System --> Coordinator: reviewSummary(request, memberEligibility, availabilityEvidence)
+else unauthorised / unknown / not reviewable
+  System --> Coordinator: reviewUnavailable(reason)
+end
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+title DSD-01: Submit Standard Loan Request
+autonumber
+actor Member
+boundary LoanRequestUI
+control LoanRequestController
+entity MemberRepository
+entity EquipmentTypeRepository
+control AvailabilityPolicy
+control RequestReferenceGenerator
+entity LoanRequest
+entity LoanRequestRepository
+Member -> LoanRequestUI: submit request details
+LoanRequestUI -> LoanRequestController: submitLoanRequest(details)
+LoanRequestController -> MemberRepository: find(memberNumber)
+MemberRepository --> LoanRequestController: member
+LoanRequestController -> Member: canBorrow()
+Member --> LoanRequestController: eligible
+LoanRequestController -> EquipmentTypeRepository: find(typeCode)
+EquipmentTypeRepository --> LoanRequestController: equipmentType
+LoanRequestController -> AvailabilityPolicy: isAvailable(type, quantity, period)
+AvailabilityPolicy --> LoanRequestController: available
+LoanRequestController -> RequestReferenceGenerator: nextReference()
+RequestReferenceGenerator --> LoanRequestController: reference
+create LoanRequest
+LoanRequestController -> LoanRequest: submit(reference, member, type, quantity, period)
+LoanRequestController -> LoanRequestRepository: save(request)
+LoanRequestRepository --> LoanRequestController: saved
+LoanRequestController --> LoanRequestUI: accepted(reference, SUBMITTED)
+LoanRequestUI --> Member: display confirmation
+@enduml
