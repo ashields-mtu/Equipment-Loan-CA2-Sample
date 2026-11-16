@@ -1,5 +1,5 @@
 name: User Story
-about: Value-oriented Product Backlog item
+description: Value-oriented Product Backlog item
 title: "US-XX: "
 labels: ["user-story"]
 body:
