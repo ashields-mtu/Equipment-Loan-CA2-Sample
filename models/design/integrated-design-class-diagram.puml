@@ -1,55 +1,185 @@
 @startuml
 title Integrated Design Class Diagram
+
 skinparam classAttributeIconSize 0
-interface MemberRepository { +find(memberNumber): Member }
-interface EquipmentTypeRepository { +find(typeCode): EquipmentType }
-interface LoanRequestRepository { +find(reference): LoanRequest
-+save(request): void }
-interface ReservationRepository { +findFor(type, period): List<EquipmentReservation>
-+save(reservation): void }
-interface RequestReferenceGenerator { +nextReference(): RequestReference }
-class LoanRequestController <<controller>> {
-+submitLoanRequest(details): SubmitLoanRequestResult
-+getReviewSummary(coordinatorId, reference): ReviewSummaryResult
-+decideLoanRequest(coordinatorId, reference, decision, reason): LoanDecisionResult
+hide empty members
+
+interface MemberRepository {
+  +find(memberNumber: MemberNumber): Member
 }
-class Member <<entity>> { -memberNumber: MemberNumber
--accountStatus: AccountStatus
-+canBorrow(): Boolean }
-class LoanCoordinator <<entity>> { +canReviewRequests(): Boolean
-+canDecideRequests(): Boolean }
-class EquipmentType <<entity>> { -typeCode: EquipmentTypeCode
--totalQuantity: int }
-class LoanPeriod <<value object>> { -collectionDate: LocalDate
--durationDays: int
-+overlaps(other): Boolean }
-class LoanRequest <<entity>> { -reference: RequestReference
--quantity: int
--status: LoanRequestStatus
-+submit(...): LoanRequest
-+approve(decision, reservation): void
-+reject(decision): void
-+isSubmitted(): Boolean }
-class AvailabilityPolicy <<service>> { +isAvailable(type, quantity, period): Boolean
-+evaluate(type, quantity, period): AvailabilityEvidence }
-class LoanDecision <<entity>> { +approve(coordinator, request): LoanDecision
-+reject(coordinator, request, reason): LoanDecision }
-class EquipmentReservation <<entity>> { +create(type, quantity, period): EquipmentReservation }
+
+interface EquipmentTypeRepository {
+  +find(typeCode: EquipmentTypeCode): EquipmentType
+}
+
+interface LoanRequestRepository {
+  +find(reference: RequestReference): LoanRequest
+  +save(request: LoanRequest): void
+}
+
+interface ReservationRepository {
+  +findFor(
+      type: EquipmentType,
+      period: LoanPeriod
+    ): List
+  +save(reservation: EquipmentReservation): void
+}
+
+interface RequestReferenceGenerator {
+  +nextReference(): RequestReference
+}
+
+class LoanRequestController <<controller>> {
+  +submitLoanRequest(
+      details: SubmitLoanRequestDetails
+    ): SubmitLoanRequestResult
+
+  +getReviewSummary(
+      coordinatorId: CoordinatorId,
+      reference: RequestReference
+    ): ReviewSummaryResult
+
+  +decideLoanRequest(
+      coordinatorId: CoordinatorId,
+      reference: RequestReference,
+      decision: DecisionType,
+      reason: String
+    ): LoanDecisionResult
+}
+
+class Member <<entity>> {
+  -memberNumber: MemberNumber
+  -accountStatus: AccountStatus
+  +canBorrow(): Boolean
+}
+
+class LoanCoordinator <<entity>> {
+  +canReviewRequests(): Boolean
+  +canDecideRequests(): Boolean
+}
+
+class EquipmentType <<entity>> {
+  -typeCode: EquipmentTypeCode
+  -totalQuantity: int
+}
+
+class LoanPeriod <<valueObject>> {
+  -collectionDate: LocalDate
+  -durationDays: int
+  +overlaps(other: LoanPeriod): Boolean
+}
+
+class LoanRequest <<entity>> {
+  -reference: RequestReference
+  -quantity: int
+  -status: LoanRequestStatus
+
+  {static} +submit(
+      reference: RequestReference,
+      member: Member,
+      type: EquipmentType,
+      quantity: int,
+      period: LoanPeriod
+    ): LoanRequest
+
+  +approve(
+      decision: LoanDecision,
+      reservation: EquipmentReservation
+    ): void
+
+  +reject(decision: LoanDecision): void
+  +isSubmitted(): Boolean
+}
+
+class AvailabilityPolicy <<service>> {
+  +isAvailable(
+      type: EquipmentType,
+      quantity: int,
+      period: LoanPeriod
+    ): Boolean
+
+  +evaluate(
+      type: EquipmentType,
+      quantity: int,
+      period: LoanPeriod
+    ): AvailabilityEvidence
+}
+
+class LoanDecision <<entity>> {
+  {static} +approve(
+      coordinator: LoanCoordinator,
+      request: LoanRequest
+    ): LoanDecision
+
+  {static} +reject(
+      coordinator: LoanCoordinator,
+      request: LoanRequest,
+      reason: String
+    ): LoanDecision
+}
+
+class EquipmentReservation <<entity>> {
+  {static} +create(
+      type: EquipmentType,
+      quantity: int,
+      period: LoanPeriod
+    ): EquipmentReservation
+}
+
 class SubmitLoanRequestResult <<result>>
 class ReviewSummaryResult <<result>>
 class LoanDecisionResult <<result>>
+
+class MemberNumber <<valueObject>>
+class EquipmentTypeCode <<valueObject>>
+class RequestReference <<valueObject>>
+class CoordinatorId <<valueObject>>
+class SubmitLoanRequestDetails <<dto>>
+class AvailabilityEvidence <<valueObject>>
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum LoanRequestStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum DecisionType {
+  APPROVE
+  REJECT
+}
+
 LoanRequestController --> MemberRepository
 LoanRequestController --> EquipmentTypeRepository
 LoanRequestController --> LoanRequestRepository
 LoanRequestController --> ReservationRepository
 LoanRequestController --> RequestReferenceGenerator
 LoanRequestController --> AvailabilityPolicy
-LoanRequest "*" --> "1" Member
-LoanRequest "*" --> "1" EquipmentType
-LoanRequest *-- LoanPeriod
-LoanRequest "1" --> "0..1" LoanDecision
-LoanRequest "1" --> "0..1" EquipmentReservation
+
+Member --> AccountStatus
+Member --> MemberNumber
+
+LoanRequest "*" --> "1" Member : submitted by
+LoanRequest "*" --> "1" EquipmentType : requests
+LoanRequest *-- "1" LoanPeriod : for
+LoanRequest "1" --> "0..1" LoanDecision : receives
+LoanRequest "1" --> "0..1" EquipmentReservation : creates on approval
+LoanRequest --> LoanRequestStatus
+LoanRequest --> RequestReference
+
 AvailabilityPolicy --> ReservationRepository
-EquipmentReservation "*" --> "1" EquipmentType
-EquipmentReservation *-- LoanPeriod
+
+EquipmentReservation "*" --> "1" EquipmentType : reserves
+EquipmentReservation *-- "1" LoanPeriod : for
+
+LoanDecision "*" --> "1" LoanCoordinator : made by
+LoanDecision --> DecisionType
+
+EquipmentType --> EquipmentTypeCode
+
 @enduml
